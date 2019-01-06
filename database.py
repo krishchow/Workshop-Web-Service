@@ -57,7 +57,7 @@ class myDB:
     def genKeys(self,amount):
         outKeys = []
         for _ in range(amount):
-            key = ''.join(random.choice(string.ascii_uppercase + string.ascii_lowercase + string.digits) for _ in range(32))
+            key = ''.join(random.choice(string.ascii_uppercase + string.ascii_lowercase + string.digits) for _ in range(16))
             outKeys.append(key)
             current = self.User(key=key)
             self.database.session.add(current)
@@ -79,7 +79,7 @@ class myDB:
         try:
             for i in attributeDct:
                 ad[i] = attributeDct[i]
-            ad['Total'] = int(ad['Attack']) +int(ad['Defense']) +int(ad['HP']) +int(ad['SpAttack']) +int(ad['SpDefense'])
+            ad['Total'] = int(ad['Attack']) +int(ad['Defense']) +int(ad['HP']) +int(ad['SpAttack']) +int(ad['SpDefense']) +int(ad['Speed'])
             ad.pop('_sa_instance_state')
             newPoke = self.Poke(**ad)
             self.database.session.merge(newPoke)
@@ -87,3 +87,18 @@ class myDB:
         except ValueError:
             return 'inperror'
         return {pokeid: 'Success'}
+    
+    def deletePokemon(self, userid, data):
+        try:
+            pokeRow = self.Poke.query.filter_by(id=data['id']).first()
+        except ValueError:
+            return 'inperror'
+        except KeyError:
+            return 'inperror'
+        if pokeRow == None:
+            return 'notfound'
+        if pokeRow.CreatedBy != userid:
+            return 'noaccess'
+        self.database.session.delete(pokeRow)
+        self.database.session.commit()
+        return {data['id']: 'Deleted'}

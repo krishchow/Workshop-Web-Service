@@ -55,7 +55,7 @@ def requires_auth(f):
 def index():
     return "Hello, World!"
 
-@app.route('/poke/', methods=['POST','PUT','GET','PATCH'])
+@app.route('/poke/', methods=['POST','PUT','GET','PATCH','DELETE'])
 @requires_auth
 def getMon():
     if request.method == 'POST':
@@ -81,6 +81,8 @@ def getMon():
         data = db.getAllPoke(request.headers.get('key'))
         if data is None:
             return abort(404)
+        if len(data)==0:
+            return abort(404)
         return jsonify(data)
     if request.method == 'PATCH':
         vals = request.get_json()
@@ -103,7 +105,18 @@ def getMon():
             return abort(406)
         else:
             return jsonify(o)
+    if request.method == 'DELETE':
+        o=db.deletePokemon(request.headers.get('key'), request.get_json())
+        if o is 'noaccess':
+            return abort(401)
+        elif o is 'notfound':
+            return abort(404)
+        elif o is 'inperror':
+            return abort(406)
+        else:
+            return jsonify(o)
 
 if __name__ == '__main__':
+    #print(db.genKeys(5))
     app.run(debug=True)
     #app.run(host= '0.0.0.0')
