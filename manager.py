@@ -45,7 +45,7 @@ def requires_auth(f):
     @wraps(f)
     def decorated(*args, **kwargs):
         auth = request.headers.get('key')
-        if not auth or not check_auth(auth):
+        if not check_auth(auth):
             return abort(401)
         return f(*args, **kwargs)
     return decorated
@@ -54,8 +54,8 @@ def requires_auth(f):
 def index():
     return "Hello, World!"
 
+@app.route('/poke/', methods=['POST','PUT','GET'])
 @requires_auth
-@app.route('/poke/', methods=['POST','PUT'])
 def getMon():
     if request.method == 'POST':
         o=db.getPokemon(request.get_json())
@@ -67,7 +67,7 @@ def getMon():
         out = {}
         for i in vals.keys():
             out[i] = vals.get(i)
-        out['CreatedBy'] = request.headers.get('Key')
+        out['CreatedBy'] = request.headers.get('key')
         out['Gen'] = 8
         out['id'] = None
         if not out.get('Type2'): out['Type2'] = None
@@ -76,9 +76,11 @@ def getMon():
         if o is None:
             return abort(404)
         return jsonify(o)
-
-
-
+    if request.method == 'GET':
+        data = db.getAllPoke(request.headers.get('key'))
+        if data is None:
+            return abort(404)
+        return jsonify(data)
 
 if __name__ == '__main__':
     app.run(debug=True)

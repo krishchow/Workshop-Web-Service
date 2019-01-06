@@ -12,7 +12,7 @@ class myDB:
 
     def initDb(self):
         self.database.create_all()
-        #admin = self.User(key='123456')
+        #admin = self.User(key='admin')
         #self.database.session.add(admin)
         #self.database.session.commit()
 
@@ -47,8 +47,7 @@ class myDB:
             return None
 
     def verifyKey(self,key):
-        self.cur.execute('SELECT * FROM auth WHERE key="{0}";'.format(key))
-        row = self.cur.fetchone()
+        row = self.User.query.filter_by(key=key).first()
         if row == None:
             return False
         else:
@@ -63,3 +62,10 @@ class myDB:
             self.database.session.add(current)
         self.database.session.commit()
         return outKeys
+
+    def getAllPoke(self,userKey):
+        rows = self.Poke.query.filter_by(CreatedBy=userKey).all()
+        out = [poke.__dict__ for poke in rows]
+        for i in out:
+            i.pop('_sa_instance_state')
+        return out
