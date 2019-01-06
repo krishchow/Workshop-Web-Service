@@ -46,6 +46,7 @@ def requires_auth(f):
     def decorated(*args, **kwargs):
         auth = request.headers.get('key')
         if not check_auth(auth):
+            print('login failed')
             return abort(401)
         return f(*args, **kwargs)
     return decorated
@@ -54,7 +55,7 @@ def requires_auth(f):
 def index():
     return "Hello, World!"
 
-@app.route('/poke/', methods=['POST','PUT','GET'])
+@app.route('/poke/', methods=['POST','PUT','GET','PATCH'])
 @requires_auth
 def getMon():
     if request.method == 'POST':
@@ -81,6 +82,27 @@ def getMon():
         if data is None:
             return abort(404)
         return jsonify(data)
+    if request.method == 'PATCH':
+        vals = request.get_json()
+        out = {}
+        for i in vals.keys():
+            out[i] = vals.get(i)
+        out['Gen'] = 8
+        try:
+            id = int(out.pop('id'))
+        except ValueError:
+            return abort(406)
+        if not out.get('Type2'): out['Type2'] = None
+        if not out.get('Total'): out['Total'] = None
+        o=db.updatePoke(request.headers.get('key'), id, out)
+        if o is 'noaccess':
+            return abort(401)
+        elif o is 'notfound':
+            return abort(404)
+        elif o is 'inperror':
+            return abort(406)
+        else:
+            return jsonify(o)
 
 if __name__ == '__main__':
     app.run(debug=True)

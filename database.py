@@ -17,6 +17,7 @@ class myDB:
         #self.database.session.commit()
 
     def getPokemon(self,idmap):
+        print(idmap)
         try:
             poke = self.Poke.query.filter_by(id=int(idmap['id'])).first()
         except ValueError:
@@ -55,7 +56,7 @@ class myDB:
 
     def genKeys(self,amount):
         outKeys = []
-        for i in range(amount):
+        for _ in range(amount):
             key = ''.join(random.choice(string.ascii_uppercase + string.ascii_lowercase + string.digits) for _ in range(32))
             outKeys.append(key)
             current = self.User(key=key)
@@ -65,7 +66,24 @@ class myDB:
 
     def getAllPoke(self,userKey):
         rows = self.Poke.query.filter_by(CreatedBy=userKey).all()
-        out = [poke.__dict__ for poke in rows]
-        for i in out:
-            i.pop('_sa_instance_state')
+        out = [poke.__dict__['id'] for poke in rows]
         return out
+
+    def updatePoke(self, userid, pokeid, attributeDct):
+        pokeRow = self.Poke.query.filter_by(id=pokeid)
+        if pokeRow.first() == None:
+            return 'notfound'
+        if pokeRow.first().CreatedBy != userid:
+            return 'noaccess'
+        ad = pokeRow.first().__dict__
+        try:
+            for i in attributeDct:
+                ad[i] = attributeDct[i]
+            ad['Total'] = int(ad['Attack']) +int(ad['Defense']) +int(ad['HP']) +int(ad['SpAttack']) +int(ad['SpDefense'])
+            ad.pop('_sa_instance_state')
+            newPoke = self.Poke(**ad)
+            self.database.session.merge(newPoke)
+            self.database.session.commit()
+        except ValueError:
+            return 'inperror'
+        return {pokeid: 'Success'}
