@@ -2,6 +2,8 @@ import sqlite3
 import random, string
 from flask import jsonify
 from flask_sqlalchemy import inspect
+from sqlalchemy import exists
+from csv import DictReader
 
 class myDB:
     def __init__(self, db, userdb, pdb):
@@ -11,10 +13,21 @@ class myDB:
         self.initDb()
 
     def initDb(self):
+        self.database.session.commit()
         self.database.create_all()
-        #admin = self.User(key='admin')
-        #self.database.session.add(admin)
-        #self.database.session.commit()
+        if not self.User.query.filter_by(key='admin').count():
+            admin = self.User(key='admin')
+            self.database.session.add(admin)
+            self.database.session.commit()
+            inp = open('pokemon.csv',encoding = "ISO-8859-1")
+            reader = list(DictReader(inp))
+            for i in reader:
+                i['id'] = None
+                current = self.Poke(**i)
+                self.database.session.add(current)
+            self.database.session.commit()
+        
+        
 
     def getPokemon(self,idmap):
         print(idmap)
