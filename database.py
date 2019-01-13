@@ -26,8 +26,6 @@ class myDB:
                 current = self.Poke(**i)
                 self.database.session.add(current)
             self.database.session.commit()
-        
-        
 
     def getPokemon(self,idmap):
         print(idmap)

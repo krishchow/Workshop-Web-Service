@@ -1,4 +1,4 @@
-from database import *
+from database import myDB
 from flask import Flask, jsonify, abort, request,Response
 import csv
 import random, string
@@ -6,10 +6,17 @@ import datetime
 import ast,base64
 from functools import wraps
 from flask_sqlalchemy import SQLAlchemy
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///test.db'
 sqlDB = SQLAlchemy(app)
+limiter = Limiter(
+    app,
+    key_func=get_remote_address,
+    default_limits=["10 per minute", "1 per second"],
+)
 
 class User(sqlDB.Model):
     key = sqlDB.Column(sqlDB.String(32), unique=True, nullable=False,primary_key=True)
