@@ -15,7 +15,7 @@ sqlDB = SQLAlchemy(app)
 limiter = Limiter(
     app,
     key_func=get_remote_address,
-    default_limits=["10 per minute", "1 per second"],
+    default_limits=["50 per minute", "1 per second"],
 )
 
 class User(sqlDB.Model):
@@ -124,6 +124,6 @@ def getMon():
             return jsonify(o)
 
 if __name__ == '__main__':
-    #print(db.genKeys(5))
+    #print(db.genKeys(1))
     app.run(debug=True)
     #app.run(host= '0.0.0.0')
