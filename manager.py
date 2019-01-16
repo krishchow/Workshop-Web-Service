@@ -15,7 +15,7 @@ sqlDB = SQLAlchemy(app)
 limiter = Limiter(
     app,
     key_func=get_remote_address,
-    default_limits=["50 per minute", "1 per second"],
+    default_limits=["30 per minute", "1 per second"],
 )
 
 class User(sqlDB.Model):
