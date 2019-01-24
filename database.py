@@ -72,7 +72,10 @@ class myDB:
             outKeys.append(key)
             current = self.User(key=key)
             self.database.session.add(current)
-        self.database.session.commit()
+        try:
+            self.database.session.commit()
+        except Exception:
+            return "Failed"
         return outKeys
 
     def getAllPoke(self,userKey):

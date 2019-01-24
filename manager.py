@@ -12,9 +12,13 @@ from flask_limiter.util import get_remote_address
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///test.db'
 sqlDB = SQLAlchemy(app)
+
+def keyFunction():
+    return request.headers.get('key')
+
 limiter = Limiter(
     app,
-    key_func=get_remote_address,
+    key_func=keyFunction,
     default_limits=["30 per minute", "1 per second"],
 )
 
@@ -60,7 +64,13 @@ def requires_auth(f):
 
 @app.route('/')
 def index():
-    return "Hello, World!"
+    return "Your connection is working!"
+
+@app.route('/getID/',methods=['GET'])
+@limiter.limit("1/minute",get_remote_address)
+def getID():
+    o = db.genKeys(1)
+    return jsonify(o)
 
 @app.route('/poke/', methods=['POST','PUT','GET','PATCH','DELETE'])
 @requires_auth
