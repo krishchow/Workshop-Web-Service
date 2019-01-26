@@ -1,12 +1,11 @@
-import sqlite3
-import random, string
-from flask import jsonify
-from flask_sqlalchemy import inspect
-from sqlalchemy import exists
+from flask_sqlalchemy import SQLAlchemy
 from csv import DictReader
+from helperFunctions import randGen
+
 
 class myDB:
-    def __init__(self, db, userdb, pdb):
+    def __init__(self, db: SQLAlchemy, userdb: SQLAlchemy.Model,
+                 pdb: SQLAlchemy.Model):
         self.database = db
         self.User = userdb
         self.Poke = pdb
@@ -16,37 +15,42 @@ class myDB:
         self.database.session.commit()
         self.database.create_all()
         if not self.User.query.filter_by(key='admin').count():
+            # First time configuration
             admin = self.User(key='admin')
             self.database.session.add(admin)
             self.database.session.commit()
-            inp = open('pokemon.csv',encoding = "ISO-8859-1")
-            reader = list(DictReader(inp))
+            inputData = open('pokemon.csv', encoding="ISO-8859-1")
+            reader = list(DictReader(inputData))
             for i in reader:
                 i['id'] = None
                 current = self.Poke(**i)
                 self.database.session.add(current)
             self.database.session.commit()
 
-    def getPokemon(self,idmap):
-        print(idmap)
+    def getPokemon(self, idmap):
         try:
             poke = self.Poke.query.filter_by(id=int(idmap['id'])).first()
         except ValueError:
             return 'must be an integer'
         except KeyError:
             return 'must be an id key'
-        if poke == None:
+        if poke is None:
             return None
         dct = poke.__dict__
         dct.pop('_sa_instance_state')
         dct.pop('CreatedBy')
         return dct
 
-    def addPokemon(self,attributeDct):
+    def addPokemon(self, attributeDct):
         mykeys = [column.key for column in self.Poke.__table__.columns]
         if sorted(mykeys) == sorted(list(attributeDct.keys())):
             try:
-                attributeDct['Total'] = int(attributeDct['Attack']) +int(attributeDct['Defense']) +int(attributeDct['HP']) +int(attributeDct['SpAttack']) +int(attributeDct['SpDefense'])
+                attributeDct['Total'] = \
+                                        int(attributeDct['Attack']) + \
+                                        int(attributeDct['Defense']) + \
+                                        int(attributeDct['HP']) + \
+                                        int(attributeDct['SpAttack']) + \
+                                        int(attributeDct['SpDefense'])
             except ValueError:
                 return None
             newPoke = self.Poke(**attributeDct)
@@ -54,21 +58,21 @@ class myDB:
             self.database.session.flush()
             id = newPoke.id
             self.database.session.commit()
-            return {'id':id}
+            return {'id': id}
         else:
             return None
 
-    def verifyKey(self,key):
+    def verifyKey(self, key):
         row = self.User.query.filter_by(key=key).first()
-        if row == None:
+        if row is None:
             return False
         else:
             return True
 
-    def genKeys(self,amount):
+    def genKeys(self, amount):
         outKeys = []
         for _ in range(amount):
-            key = ''.join(random.choice(string.ascii_uppercase + string.ascii_lowercase + string.digits) for _ in range(16))
+            key = randGen()
             outKeys.append(key)
             current = self.User(key=key)
             self.database.session.add(current)
@@ -78,14 +82,14 @@ class myDB:
             return "Failed"
         return outKeys
 
-    def getAllPoke(self,userKey):
+    def getAllPoke(self, userKey):
         rows = self.Poke.query.filter_by(CreatedBy=userKey).all()
         out = [poke.__dict__['id'] for poke in rows]
         return out
 
     def updatePoke(self, userid, pokeid, attributeDct):
         pokeRow = self.Poke.query.filter_by(id=pokeid)
-        if pokeRow.first() == None:
+        if pokeRow.first() is None:
             return 'notfound'
         if pokeRow.first().CreatedBy != userid:
             return 'noaccess'
@@ -93,7 +97,10 @@ class myDB:
         try:
             for i in attributeDct:
                 ad[i] = attributeDct[i]
-            ad['Total'] = int(ad['Attack']) +int(ad['Defense']) +int(ad['HP']) +int(ad['SpAttack']) +int(ad['SpDefense']) +int(ad['Speed'])
+            ad['Total'] = int(ad['Attack']) + int(ad['Defense']) + \
+                int(ad['HP']) + \
+                int(ad['SpAttack']) + \
+                int(ad['SpDefense']) + int(ad['Speed'])
             ad.pop('_sa_instance_state')
             newPoke = self.Poke(**ad)
             self.database.session.merge(newPoke)
@@ -101,7 +108,7 @@ class myDB:
         except ValueError:
             return 'inperror'
         return {pokeid: 'Success'}
-    
+
     def deletePokemon(self, userid, data):
         try:
             pokeRow = self.Poke.query.filter_by(id=data['id']).first()
@@ -109,7 +116,7 @@ class myDB:
             return 'inperror'
         except KeyError:
             return 'inperror'
-        if pokeRow == None:
+        if pokeRow is None:
             return 'notfound'
         if pokeRow.CreatedBy != userid:
             return 'noaccess'
