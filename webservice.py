@@ -1,5 +1,6 @@
-from flask import Flask, jsonify, abort
+from flask import Flask, jsonify, Response, request
 from database import myDB
+from exceptions import flaskException
 
 
 class webservice:
@@ -7,75 +8,52 @@ class webservice:
         self.app = app
         self.db = db
 
-    def handlePOST(self, request):
-        database_output = self.db.getPokemon(request.get_json())
-        if database_output is None:
-            return abort(404)
-        return jsonify(database_output)
-
-    def handleGET(self, request):
-        database_output = self.db.getAllPoke(request.headers.get('key'))
-        if database_output is None:
-            return abort(404)
-        if len(database_output) == 0:
-            return abort(404)
-        return jsonify(database_output)
-
-    def handleDELETE(self, request):
-        key = request.headers.get('key')
-        database_output = self.db.deletePokemon(key, request.get_json())
-        if database_output is 'noaccess':
-            return abort(401)
-        elif database_output is 'notfound':
-            return abort(404)
-        elif database_output is 'inperror':
-            return abort(406)
-        else:
-            return jsonify(database_output)
-
-    def handlePATCH(self, request):
-        vals = request.get_json()
-        out = {}
-        for i in vals.keys():
-            out[i] = vals.get(i)
-        out['Gen'] = 8
+    def handlePOST(self, request: request) -> Response:
         try:
-            id = int(out.pop('id'))
-        except ValueError:
-            return abort(406)
-        if not out.get('Type2'):
-            out['Type2'] = None
-        if not out.get('Total'):
-            out['Total'] = None
-        key = request.headers.get('key')
-        database_output = self.db.updatePoke(key, id, out)
-        if database_output is 'noaccess':
-            return abort(401)
-        elif database_output is 'notfound':
-            return abort(404)
-        elif database_output is 'inperror':
-            return abort(406)
-        else:
-            return jsonify(database_output)
-
-    def handlePUT(self, request):
-        vals = request.get_json()
-        out = {}
-        for i in vals.keys():
-            out[i] = vals.get(i)
-        out['CreatedBy'] = request.headers.get('key')
-        out['Gen'] = 8
-        out['id'] = None
-        if not out.get('Type2'):
-            out['Type2'] = None
-        if not out.get('Total'):
-            out['Total'] = None
-        database_output = self.db.addPokemon(out)
-        if database_output is None:
-            return abort(404)
+            database_output = self.db.getPokemon(request.get_json())
+        except flaskException as e:
+            return e.getPage()
         return jsonify(database_output)
 
-    def handleKeyGen(self, request):
+    def handleGET(self, request: request) -> Response:
+        try:
+            database_output = self.db.getAllPoke(request.headers.get('key'))
+        except flaskException as e:
+            return e.getPage()
+        return jsonify(database_output)
+
+    def handleDELETE(self, request: request) -> Response:
+        key = request.headers.get('key')
+        try:
+            database_output = self.db.deletePokemon(key, request.get_json())
+        except flaskException as e:
+            return e.getPage()
+        return jsonify(database_output)
+
+    def handlePATCH(self, request: request) -> Response:
+        vals = request.get_json()
+        jsonDictionary = {}
+        for i in vals.keys():
+            jsonDictionary[i] = vals.get(i)
+        key = request.headers.get('key')
+        try:
+            database_output = self.db.updatePoke(key, jsonDictionary)
+        except flaskException as e:
+            return e.getPage()
+        return jsonify(database_output)
+
+    def handlePUT(self, request: request) -> Response:
+        vals = request.get_json()
+        jsonDictionary = {}
+        jsonDictionary['CreatedBy'] = request.headers.get('key')
+        for i in vals.keys():
+            jsonDictionary[i] = vals.get(i)
+        try:
+            database_output = self.db.addPokemon(jsonDictionary)
+        except flaskException as e:
+            return e.getPage()
+        return jsonify(database_output)
+
+    def handleKeyGen(self, request: request) -> Response:
         generatedKey = self.db.genKeys(1)
         return jsonify(generatedKey)
-        

@@ -1,30 +1,29 @@
-from flask import request, abort
+from flask import request, Response, abort
 from flask_sqlalchemy import SQLAlchemy
 from database import myDB
-from typing import Callable
-from random import choice
-from string import ascii_lowercase, digits, ascii_uppercase
+from typing import Callable, Union
+from flask_sqlalchemy import Model
 
 
-def keyFunction():
+def keyFunction() -> str:
     return request.headers.get('key')
 
 
-def check_auth(key, db: myDB):
+def check_auth(key, db: myDB) -> bool:
     return db.verifyKey(key)
 
 
-def _requires_auth(f: Callable, db: myDB):
+def _requires_auth(f: Callable, database=None) -> Union[Callable, Response]:
     def decorated(*args, **kwargs):
         auth = request.headers.get('key')
-        if not check_auth(auth, db):
+        if not check_auth(auth, database):
             print('{0} auth failed'.format(auth))
             return abort(401)
         return f(*args, **kwargs)
     return decorated
 
 
-def generatePokeModel(sqlDB: SQLAlchemy) -> SQLAlchemy.Model:
+def generatePokeModel(sqlDB: SQLAlchemy) -> Model:
     class Pokemon(sqlDB.Model):
         id = sqlDB.Column(sqlDB.Integer, unique=True, nullable=False,
                           primary_key=True, autoincrement=True)
@@ -48,7 +47,7 @@ def generatePokeModel(sqlDB: SQLAlchemy) -> SQLAlchemy.Model:
     return Pokemon
 
 
-def generateUserModel(sqlDB: SQLAlchemy) -> SQLAlchemy.Model:
+def generateUserModel(sqlDB: SQLAlchemy) -> Model:
     class User(sqlDB.Model):
         key = sqlDB.Column(sqlDB.String(32), unique=True,
                            nullable=False, primary_key=True)
@@ -57,8 +56,3 @@ def generateUserModel(sqlDB: SQLAlchemy) -> SQLAlchemy.Model:
             return '<User %r>' % self.key
     return User
 
-
-def randGen():
-    charList = (choice(ascii_uppercase + ascii_lowercase + digits)
-                for _ in range(16))
-    return ''.join(charList)
