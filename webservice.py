@@ -31,25 +31,17 @@ class webservice:
         return jsonify(database_output)
 
     def handlePATCH(self, request: request) -> Response:
-        vals = request.get_json()
-        jsonDictionary = {}
-        for i in vals.keys():
-            jsonDictionary[i] = vals.get(i)
         key = request.headers.get('key')
         try:
-            database_output = self.db.updatePoke(key, jsonDictionary)
+            database_output = self.db.updatePoke(key, request.get_json())
         except flaskException as e:
             return e.getPage()
         return jsonify(database_output)
 
     def handlePUT(self, request: request) -> Response:
-        vals = request.get_json()
-        jsonDictionary = {}
-        jsonDictionary['CreatedBy'] = request.headers.get('key')
-        for i in vals.keys():
-            jsonDictionary[i] = vals.get(i)
+        key = request.headers.get('key')
         try:
-            database_output = self.db.addPokemon(jsonDictionary)
+            database_output = self.db.addPokemon(key, request.get_json())
         except flaskException as e:
             return e.getPage()
         return jsonify(database_output)

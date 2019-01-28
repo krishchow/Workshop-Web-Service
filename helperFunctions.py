@@ -55,4 +55,3 @@ def generateUserModel(sqlDB: SQLAlchemy) -> Model:
         def __repr__(self):
             return '<User %r>' % self.key
     return User
-
