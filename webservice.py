@@ -9,6 +9,36 @@ class webservice:
         self.db = db
 
     def handlePOST(self, request: request) -> Response:
+        '''
+        This functions handles any POST HTTP requests by checking
+        the request JSON which is expected to conform to the following
+        standard:
+
+        {
+            "id": +int IDNumber
+        }
+
+        Based on this JSON data, the function will return a Response
+        object which has the JSON body with all of the attributes
+        of the database entry with id IDNumber. This response JSON
+        will confirm to the following standard:
+
+        {
+            "Attack": int,
+            "Defense": int,
+            "Gen": int,
+            "HP": int,
+            "Name": string,
+            "SpAttack": int,
+            "SpDefense": int,
+            "Speed": int,
+            "Total": int,
+            "Type1": string,
+            "Type2": string,
+            "isLegend": bool,
+            "id": int IDNumber
+        }
+        '''
         try:
             database_output = self.db.getPokemon(request.get_json())
         except flaskException as e:
@@ -16,6 +46,20 @@ class webservice:
         return jsonify(database_output)
 
     def handleGET(self, request: request) -> Response:
+        '''
+        This functions handles any GET HTTP requests by checking
+        the request headers for the user key. Then it queries the
+        database for all entries with the equivlent key and it
+        returns a Flask response object with a JSON body of 
+        all the 'n' entry keys. This JSON takes the form:
+
+        [
+            1,
+            2,
+            ...
+            n
+        ]
+        '''
         try:
             database_output = self.db.getAllPoke(request.headers.get('key'))
         except flaskException as e:
@@ -23,6 +67,23 @@ class webservice:
         return jsonify(database_output)
 
     def handleDELETE(self, request: request) -> Response:
+        '''
+        This function handles all DELTE HTTP requests
+        by first checking for the JSON body in the request
+        and verifying that it conforms to the following standard:
+
+        {
+            "id": +int IDNumber
+        }
+
+        Once the database has verified that the ID exists, it
+        deletes the entry and returns a success message indicating
+        the id has been deleted with the following JSON body:
+
+        {
+            IDNumber: "Deleted"
+        }
+        '''
         key = request.headers.get('key')
         try:
             database_output = self.db.deletePokemon(key, request.get_json())
@@ -31,6 +92,31 @@ class webservice:
         return jsonify(database_output)
 
     def handlePATCH(self, request: request) -> Response:
+        '''
+        This function handles all PATCH HTTP requests
+        by first checking for the JSON body in the request
+        and verifying that it conforms to the following standard:
+
+        {
+            "Attack": +int,
+            "Defense": +int,
+            "Gen": -int,
+            "HP": +int,
+            "Name": +string,
+            "SpAttack": +int,
+            "SpDefense": +int,
+            "Speed": +int,
+            "Total": +int,
+            "Type1": +string,
+            "Type2": -string,
+            "isLegend": -bool,
+            "id": +int IDNumber
+        }
+
+        {
+            IDNumber: "Success"
+        }
+        '''
         key = request.headers.get('key')
         try:
             database_output = self.db.updatePoke(key, request.get_json())
@@ -39,6 +125,27 @@ class webservice:
         return jsonify(database_output)
 
     def handlePUT(self, request: request) -> Response:
+        '''
+
+        {
+            "Attack": +int,
+            "Defense": +int,
+            "Gen": -int,
+            "HP": +int,
+            "Name": +string,
+            "SpAttack": +int,
+            "SpDefense": +int,
+            "Speed": +int,
+            "Total": +int,
+            "Type1": +string,
+            "Type2": -string,
+            "isLegend": -bool
+        }
+
+        {
+            "id": int
+        }
+        '''
         key = request.headers.get('key')
         try:
             database_output = self.db.addPokemon(key, request.get_json())
@@ -47,5 +154,10 @@ class webservice:
         return jsonify(database_output)
 
     def handleKeyGen(self, request: request) -> Response:
+        '''
+        [
+            string
+        ]
+        '''
         generatedKey = self.db.genKeys(1)
         return jsonify(generatedKey)

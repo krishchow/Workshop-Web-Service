@@ -97,7 +97,7 @@ class myDB:
         self.database.session.flush()
         id = newPoke.id
         self.database.session.commit()
-        return {'id': id}
+        return {'id': int(id)}
 
     def verifyKey(self, key: str) -> bool:
         row = self.User.query.filter_by(key=key).first()
@@ -175,4 +175,4 @@ class myDB:
             raise noPermissions
         self.database.session.delete(pokeRow)
         self.database.session.commit()
-        return {inputDict['id']: 'Deleted'}
+        return {int(inputDict['id']): 'Deleted'}
