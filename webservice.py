@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, Response, request
+from flask import Flask, jsonify, Response, request, abort
 from database import myDB
 from exceptions import flaskException
 
@@ -8,9 +8,9 @@ class webservice:
         self.app = app
         self.db = db
 
-    def handlePOST(self, request: request) -> Response:
+    def handleGET(self, request: request) -> Response:
         '''
-        This functions handles any POST HTTP requests by checking
+        This functions handles any GET HTTP requests by checking
         the request JSON which is expected to conform to the following
         standard:
 
@@ -40,12 +40,12 @@ class webservice:
         }
         '''
         try:
-            database_output = self.db.getPokemon(request.get_json())
+            database_output = self.db.getPokemon(request.get_json)
         except flaskException as e:
-            return e.getPage()
+            return abort(e.getPage())
         return jsonify(database_output)
 
-    def handleGET(self, request: request) -> Response:
+    def handleUserGET(self, request: request) -> Response:
         '''
         This functions handles any GET HTTP requests by checking
         the request headers for the user key. Then it queries the
@@ -63,7 +63,7 @@ class webservice:
         try:
             database_output = self.db.getAllPoke(request.headers.get('key'))
         except flaskException as e:
-            return e.getPage()
+            return abort(e.getPage())
         return jsonify(database_output)
 
     def handleDELETE(self, request: request) -> Response:
@@ -77,19 +77,14 @@ class webservice:
         }
 
         Once the database has verified that the ID exists, it
-        deletes the entry and returns a success message indicating
-        the id has been deleted with the following JSON body:
-
-        {
-            IDNumber: "Deleted"
-        }
+        deletes the entry and returns a success code.
         '''
         key = request.headers.get('key')
         try:
-            database_output = self.db.deletePokemon(key, request.get_json())
+            self.db.deletePokemon(key, request.get_json)
         except flaskException as e:
-            return e.getPage()
-        return jsonify(database_output)
+            return abort(e.getPage())
+        return jsonify(success=True)
 
     def handlePATCH(self, request: request) -> Response:
         '''
@@ -119,14 +114,13 @@ class webservice:
         '''
         key = request.headers.get('key')
         try:
-            database_output = self.db.updatePoke(key, request.get_json())
+            self.db.updatePoke(key, request.get_json)
         except flaskException as e:
-            return e.getPage()
-        return jsonify(database_output)
+            return abort(e.getPage())
+        return jsonify(success=True)
 
     def handlePUT(self, request: request) -> Response:
         '''
-
         {
             "Attack": +int,
             "Defense": +int,
@@ -141,17 +135,16 @@ class webservice:
             "Type2": -string,
             "isLegend": -bool
         }
-
         {
             "id": int
         }
         '''
         key = request.headers.get('key')
         try:
-            database_output = self.db.addPokemon(key, request.get_json())
+            self.db.addPokemon(key, request.get_json)
         except flaskException as e:
-            return e.getPage()
-        return jsonify(database_output)
+            return abort(e.getPage())
+        return jsonify(success=True)
 
     def handleKeyGen(self, request: request) -> Response:
         '''
