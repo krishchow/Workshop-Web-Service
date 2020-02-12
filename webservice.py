@@ -40,7 +40,7 @@ class webservice:
         }
         '''
         try:
-            database_output = self.db.getPokemon(request.get_json)
+            database_output = self.db.getPokemon(request.get_json())
         except flaskException as e:
             return abort(e.getPage())
         return jsonify(database_output)
@@ -81,7 +81,7 @@ class webservice:
         '''
         key = request.headers.get('key')
         try:
-            self.db.deletePokemon(key, request.get_json)
+            self.db.deletePokemon(key, request.get_json())
         except flaskException as e:
             return abort(e.getPage())
         return jsonify(success=True)
@@ -114,7 +114,7 @@ class webservice:
         '''
         key = request.headers.get('key')
         try:
-            self.db.updatePoke(key, request.get_json)
+            self.db.updatePoke(key, request.get_json())
         except flaskException as e:
             return abort(e.getPage())
         return jsonify(success=True)
@@ -141,7 +141,7 @@ class webservice:
         '''
         key = request.headers.get('key')
         try:
-            self.db.addPokemon(key, request.get_json)
+            self.db.addPokemon(key, request.get_json())
         except flaskException as e:
             return abort(e.getPage())
         return jsonify(success=True)

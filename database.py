@@ -13,7 +13,6 @@ def randGen() -> str:
                 for _ in range(16))
     return ''.join(charList)
 
-
 def attributeProcessing(inputDict: dict, rmID: bool):
     inputDict['Gen'] = 8
     inputDict['Attack'] = int(inputDict['Attack'])
